@@ -16,7 +16,7 @@ python cnnTF.py
 - Fully connected that map to 10 output classes
 
 ### Results:
-!(https://github.com/ayesha92ahmad/convolutional-neural-network/blob/master/simple-model.png)[Simple model]
+![Simple model](https://github.com/ayesha92ahmad/convolutional-neural-network/blob/master/simple-model.png)
 
 2.
 - 7x7 Conv with stride 2
@@ -26,7 +26,7 @@ python cnnTF.py
 - Fully connected that map to 10 output classes
 
 ### Results:
-!(https://github.com/ayesha92ahmad/convolutional-neural-network/blob/master/complex-model.png)[Complex network]
+![Complex network](https://github.com/ayesha92ahmad/convolutional-neural-network/blob/master/complex-model.png)
 
 3.
 - 7x7 Conv with stride 2
@@ -42,6 +42,6 @@ python cnnTF.py
 - Fully connected that map to 10 output classes
 
 ### Results:
-!(https://github.com/ayesha92ahmad/convolutional-neural-network/blob/master/ownmodel-without-dropoff.png)[another complex model]
+![another complex model](https://github.com/ayesha92ahmad/convolutional-neural-network/blob/master/ownmodel-without-dropoff.png)
 
 Since I have a MAC book without GPU this entire program takes a long time to run (about 8-9 hours).
