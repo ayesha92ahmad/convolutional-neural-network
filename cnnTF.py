@@ -33,7 +33,7 @@ xVal -= meanImage
 xTest -= meanImage
 
 # Select device
-deviceType = "/gpu:0"
+deviceType = "/cpu:0"
 
 # Simple Model
 tf.reset_default_graph()
@@ -56,6 +56,7 @@ def simpleModel():
         # Define Loss
         totalLoss = tf.losses.hinge_loss(tf.one_hot(y, 10), logits=yOut)
         meanLoss = tf.reduce_mean(totalLoss)
+
 
         # Define Optimizer
         optimizer = tf.train.AdamOptimizer(5e-4)
@@ -124,16 +125,31 @@ def complexModel():
         # - Store last layer output in yOut                                         #
         #############################################################################
 
+        #       7x7 Convolution with stride = 2
+        wConv = tf.get_variable("wConv", shape=[7, 7, 3, 64])
+        bConv = tf.get_variable("bConv", shape=[64])
 
+        # Define Convolutional Neural Network
+        a = tf.nn.conv2d(x, wConv, strides=[1,2,2,1], padding='VALID') + bConv # Stride [batch, height, width, channels]
+        #       Relu Activation
+        h = tf.nn.relu(a)
+        #       2x2 Max Pooling
+        max_pool_output = tf.nn.max_pool(value=h, ksize=[1,2,2,1], strides=[1,2,2,1],padding='VALID')
+        hFlat = tf.reshape(max_pool_output, [-1, 6*6*64]) # Flat the output to be size 6*6*64 each row
 
+        #       Fully connected layer with 1024 hidden neurons
+        w_fully_h = tf.get_variable("w_fully_h", shape=[6*6*64, 1024])
+        b_fully_h = tf.get_variable("b_fully_h", shape=[1024])
 
-
-
-
-
-
-        yOut = None
-        pass
+        fully_connected_output = tf.matmul(hFlat, w_fully_h) + b_fully_h
+        #       Relu Activation
+        relu_out =  tf.nn.relu(fully_connected_output)
+        relu_outFlat = tf.reshape(relu_out, [-1, 1024]) # Flat the output to be size 1024 each row
+        #       Fully connected layer to map to 10 outputs
+        w = tf.get_variable("w", shape=[1024,10])
+        b = tf.get_variable("b", shape=[10])
+        # - Store last layer output in yOut
+        yOut = tf.matmul(relu_outFlat, w) + b
         #########################################################################
         #                       END OF YOUR CODE                                #
         #########################################################################
@@ -168,16 +184,50 @@ def yourOwnModel():
         # - Construct your own model to get validation accuracy > 70%               #
         # - Store last layer output in yOut                                         #
         #############################################################################
+        #       7x7 Convolution with stride = 2
+        wConv1 = tf.get_variable("wConv1", shape=[7, 7, 3, 32])
+        bConv1 = tf.get_variable("bConv1", shape=[32])
 
+        # Define Convolutional Neural Network
+        a = tf.nn.conv2d(x, wConv1, strides=[1,2,2,1], padding='SAME') + bConv1 # Stride [batch, height, width, channels]
+        #       Relu Activation
+        h = tf.nn.relu(a)
 
+        #       2x2 Max Pooling
+        max_pool_output = tf.nn.max_pool(value=h, ksize=[1,2,2,1], strides=[1,2,2,1],padding='SAME')
+        #       5x5 Convolution with stride = 2
+        wConv2 = tf.get_variable("wConv2", shape=[5, 5, 32, 64])
+        bConv2 = tf.get_variable("bConv2", shape=[64])
 
+        # Define Convolutional Neural Network
+        a = tf.nn.conv2d(max_pool_output, wConv2, strides=[1,1,1,1], padding='SAME') + bConv2 # Stride [batch, height, width, channels]
+        #       Relu Activation
+        h = tf.nn.relu(a)
+        #       2x2 Max Pooling
+        max_pool_output = tf.nn.max_pool(value=h, ksize=[1,2,2,1], strides=[1,2,2,1],padding='SAME')
+        hFlat = tf.reshape(max_pool_output, [-1, 4*4*64]) # Flat the output to be size 6*6*64 each row
 
+        #       Fully connected layer with 1024 hidden neurons
+        w_fully_h = tf.get_variable("w_fully_h", shape=[ 4*4*64, 1024])
+        b_fully_h = tf.get_variable("b_fully_h", shape=[1024])
 
+        fully_connected_output = tf.matmul(hFlat, w_fully_h) + b_fully_h
+        #       Relu Activation
+        relu_out =  tf.nn.relu(fully_connected_output)
+        relu_outFlat = tf.reshape(relu_out, [-1, 1024]) # Flat the output to be size 1024 each row
+        #       Fully connected layer to map to 128 outputs
+        w1 = tf.get_variable("w1", shape=[1024,128])
+        b1 = tf.get_variable("b1", shape=[128])
 
-
-
-        yOut = None
-        pass
+        fully_connected_output= tf.matmul(relu_outFlat, w1) + b1
+        relu_out =  tf.nn.relu(fully_connected_output)
+        relu_outFlat = tf.reshape(relu_out, [-1, 128]) # Flat the output to be size 128 each row
+        relu_outFlat = tf.nn.dropout(relu_outFlat, 0.5) #To avoid overfitting
+        #       Fully connected layer to map to 10 outputs
+        w2 = tf.get_variable("w2", shape=[128,10])
+        b2 = tf.get_variable("b2", shape=[10])
+        # - Store last layer output in yOut
+        yOut = tf.matmul(relu_outFlat, w2) + b2
         #########################################################################
         #                       END OF YOUR CODE                                #
         #########################################################################
@@ -202,8 +252,7 @@ print("\n################ Your Own Model #########################")
 # TODO: 0 points                                                        #
 # - You can set your own batchSize and epochs                           #
 #########################################################################
-train(yourOwnModel(), xTrain, yTrain, xVal, yVal, xTest, yTest)
+train(yourOwnModel(), xTrain, yTrain, xVal, yVal, xTest, yTest, batchSize=256, epochs=200, printEvery=10)
 #########################################################################
 #                       END OF YOUR CODE                                #
 #########################################################################
-
